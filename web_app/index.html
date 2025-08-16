@@ -690,19 +690,21 @@
 
             // Завершение игры
             function finishGame() {
-                const gold = Math.floor(score / 10);
-                const gameData = {
-                    score: score,
-                    gold: gold,
-                    combo_max: Math.max(...[combo]),
-                    moves_used: 50 - moves,
-                    timestamp: Date.now()
+                // Боту нужен только итоговый счет для расчета награды.
+                // Это безопаснее, так как клиент не диктует, сколько золота он должен получить.
+                const dataToSend = {
+                    score: score
                 };
                 
                 if (tg) {
-                    tg.sendData(JSON.stringify(gameData));
+                    // Отправляем данные в виде JSON-строки
+                    tg.sendData(JSON.stringify(dataToSend));
+                    // После отправки данных можно закрыть Web App.
+                    // Пользователь сразу вернется в чат с ботом и увидит сообщение о награде.
+                    tg.close();
                 } else {
-                    alert(`Игра завершена! Заработано золота: ${gold}`);
+                    // Это сообщение для отладки, если вы открываете файл локально в браузере
+                    alert(`Игра завершена! Финальный счет: ${score}. Данные для отправки: ${JSON.stringify(dataToSend)}`);
                 }
             }
 
