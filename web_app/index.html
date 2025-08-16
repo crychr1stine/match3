@@ -356,13 +356,25 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Telegram Web App инициализация
-            const tg = window.Telegram?.WebApp;
-            if (tg) {
+            // Telegram Web App инициализация с отладкой
+            console.log("Инициализация Telegram Web App...");
+            
+            let tg = null;
+            if (window.Telegram && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp;
                 tg.ready();
+                console.log("Telegram Web App готов:", tg);
+                console.log("User:", tg.initDataUnsafe?.user);
+                
+                // Настраиваем кнопку
                 tg.MainButton.setText('💰 Забрать заработанное золото');
                 tg.MainButton.onClick(finishGame);
-                tg.MainButton.hide(); // Скрываем до первых очков
+                tg.MainButton.hide();
+                
+                // Расширяем viewport
+                tg.expand();
+            } else {
+                console.log("Telegram Web App не доступен - запуск в браузере");
             }
 
             // Игровые переменные
