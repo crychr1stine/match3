@@ -690,20 +690,29 @@
 
             // Завершение игры
             function finishGame() {
-                // Отправляем боту ТОЛЬКО счёт.
-                // Бот сам должен посчитать награду. Это безопаснее и исправляет ошибку.
-                const dataToSend = {
-                    score: score
+                const gold = Math.floor(score / 10);
+                const gameData = {
+                    score: score,
+                    gold: gold,
+                    combo_max: maxCombo,
+                    moves_used: 50 - moves,
+                    timestamp: Date.now()
                 };
                 
                 if (tg) {
-                    // Отправляем данные в виде JSON-строки
-                    tg.sendData(JSON.stringify(dataToSend));
-                    // Сразу после отправки закрываем Web App, чтобы вернуть пользователя в чат.
+                    // !!! ДИАГНОСТИЧЕСКОЕ СООБЩЕНИЕ !!!
+                    // Если вы видите это сообщение, а бот не реагирует,
+                    // проблема 100% в URL или настройках GitHub Pages.
+                    alert(`Попытка отправить данные боту: ${JSON.stringify(gameData)}`);
+
+                    // Отправляем данные боту.
+                    tg.sendData(JSON.stringify(gameData));
+
+                    // Сразу закрываем окно игры.
                     tg.close();
                 } else {
-                    // Это сообщение для отладки, если вы открываете файл локально в браузере
-                    alert(`Игра завершена! Финальный счет: ${score}. Данные для отправки: ${JSON.stringify(dataToSend)}`);
+                    // Это сообщение сработает, если вы открыли index.html просто в браузере.
+                    alert(`Игра завершена! Заработано золота: ${gold}. Данные: ${JSON.stringify(gameData)}`);
                 }
             }
 
