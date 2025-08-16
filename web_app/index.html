@@ -1,839 +1,511 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кото-Кристаллы 💎</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cat Sweets Match-3</title>
+    <!-- Telegram WebApp Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* iOS-like Design System */
         :root {
-            --tg-bg-color: var(--tg-theme-bg-color, #1a1a2e);
-            --tg-text-color: var(--tg-theme-text-color, #ffffff);
-            --tg-hint-color: var(--tg-theme-hint-color, #888888);
-            --tg-button-color: var(--tg-theme-button-color, #4a9eff);
-            --accent-gold: #ffd700;
-            --accent-purple: #9d4edd;
-            --accent-blue: #4cc9f0;
-            --danger-red: #ff006e;
+            --bg-color: #f0f0f7;
+            --secondary-bg-color: #ffffff;
+            --text-color: #000000;
+            --secondary-text-color: #8e8e93;
+            --accent-color: #007aff;
+            --accent-disabled-color: #b0d7ff;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        
+        /* Dark Mode Support for Telegram */
+        html.telegram-dark-theme {
+             --bg-color: #1c1c1e;
+             --secondary-bg-color: #2c2c2e;
+             --text-color: #ffffff;
+             --secondary-text-color: #8d8d93;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--tg-bg-color) 0%, #16213e 100%);
-            color: var(--tg-text-color);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            overflow: hidden;
-        }
-
-        .game-container {
-            width: 100%;
-            max-width: 420px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
             padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .title {
-            font-size: 2.2em;
-            font-weight: bold;
-            background: linear-gradient(45deg, var(--accent-gold), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-        }
-
-        .stats {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
             gap: 15px;
         }
 
-        .stat-item {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 12px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--secondary-bg-color);
+            padding: 10px 15px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .header-item span:first-child {
+            font-size: 14px;
+            color: var(--secondary-text-color);
+            font-weight: 500;
         }
 
-        .stat-label {
-            font-size: 0.8em;
-            opacity: 0.7;
-            margin-bottom: 5px;
+        .header-item span:last-child {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 4px;
         }
-
-        .stat-value {
-            font-size: 1.4em;
-            font-weight: bold;
-        }
-
-        .score-value {
-            color: var(--accent-gold);
-        }
-
-        .combo-value {
-            color: var(--accent-purple);
-        }
-
-        .moves-value {
-            color: var(--accent-blue);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-gold), var(--accent-purple));
-            width: 0%;
-            transition: width 0.5s ease;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-
+        
         #game-board {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
-            gap: 3px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
+            grid-template-rows: repeat(8, 1fr);
+            aspect-ratio: 1 / 1;
+            background-color: var(--secondary-bg-color);
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             padding: 10px;
-            margin-bottom: 20px;
+            gap: 5px;
             position: relative;
         }
 
         .tile {
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            width: 100%;
+            height: 100%;
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 1.8em;
+            justify-content: center;
+            font-size: clamp(20px, 6vmin, 30px);
+            border-radius: 8px;
             cursor: pointer;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             user-select: none;
+            transition: transform 0.2s ease, opacity 0.3s ease;
         }
-
-        .tile:hover {
-            transform: scale(1.05);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-        }
-
+        
         .tile.selected {
-            transform: scale(0.95);
-            box-shadow: 0 0 20px var(--accent-gold), inset 0 0 20px rgba(255, 215, 0, 0.2);
-            border: 2px solid var(--accent-gold);
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+            transform: scale(1.1);
+            box-shadow: 0 0 10px 2px var(--accent-color);
+        }
+        
+        .tile.is-match {
+            animation: match-animation 0.5s forwards;
         }
 
-        .tile.matched {
-            animation: matchPulse 0.6s ease-out;
-        }
-
-        .tile.falling {
-            animation: fallDown 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .tile.special {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
-        }
-
-        .tile.special::after {
-            content: '✨';
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            font-size: 0.6em;
-            animation: sparkle 2s infinite;
-        }
-
-        @keyframes matchPulse {
+        @keyframes match-animation {
             0% { transform: scale(1); }
-            50% { 
-                transform: scale(1.3); 
-                box-shadow: 0 0 25px var(--accent-gold);
-                background: rgba(255, 215, 0, 0.6);
-            }
+            50% { transform: scale(1.2); opacity: 0.8; }
             100% { transform: scale(0); opacity: 0; }
         }
-
-        @keyframes fallDown {
-            from { transform: translateY(-100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes sparkle {
-            0%, 100% { transform: rotate(0deg) scale(1); opacity: 1; }
-            50% { transform: rotate(180deg) scale(1.2); opacity: 0.7; }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
-            100% { transform: scale(1); }
-        }
-
-        .particle {
+        
+        .game-over-overlay {
             position: absolute;
-            pointer-events: none;
-            font-size: 1.2em;
-            animation: particleFloat 1.5s ease-out forwards;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            text-align: center;
             z-index: 10;
         }
-
-        @keyframes particleFloat {
-            0% { 
-                transform: translateY(0) scale(1) rotate(0deg); 
-                opacity: 1; 
-            }
-            100% { 
-                transform: translateY(-80px) scale(0.5) rotate(360deg); 
-                opacity: 0; 
-            }
+        
+        html.telegram-dark-theme .game-over-overlay {
+            background: rgba(28, 28, 30, 0.7);
         }
 
-        .combo-text {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3em;
-            font-weight: bold;
-            color: var(--accent-purple);
-            text-shadow: 0 0 20px rgba(157, 78, 221, 0.8);
-            animation: comboAppear 1.5s ease-out forwards;
-            pointer-events: none;
-            z-index: 100;
+        .game-over-overlay h2 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 700;
         }
 
-        @keyframes comboAppear {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        .game-over-overlay p {
+            font-size: 18px;
+            color: var(--secondary-text-color);
+            margin: 5px 0 20px 0;
         }
-
-        .info {
-            text-align: center;
-            color: var(--tg-hint-color);
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-
-        .game-controls {
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .finish-btn {
-            background: linear-gradient(135deg, var(--accent-gold), #ff8500);
-            border: none;
-            border-radius: 15px;
-            padding: 15px 25px;
-            font-size: 1.1em;
-            font-weight: bold;
+        
+        .button {
+            background-color: var(--accent-color);
             color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-            min-width: 250px;
-        }
-
-        .finish-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-        }
-
-        .finish-btn:active {
-            transform: translateY(0);
-        }
-
-        .power-ups {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-        }
-
-        .power-up {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 15px 20px;
+            width: 100%;
             border-radius: 12px;
-            padding: 10px;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
+            transition: background-color 0.2s ease;
         }
 
-        .power-up:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+        .button:disabled {
+            background-color: var(--accent-disabled-color);
+            cursor: not-allowed;
         }
-
-        .power-up.active {
-            background: linear-gradient(135deg, var(--accent-gold), var(--accent-purple));
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        
+        .button:not(:disabled):hover {
+            opacity: 0.9;
         }
-
-        .level-indicator {
-            text-align: center;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: var(--accent-blue);
-        }
+        
     </style>
 </head>
 <body>
-    <div class="game-container">
+
+    <div class="container">
         <div class="header">
-            <h1 class="title">Кото-Кристаллы</h1>
-            <div class="level-indicator">💰 Золото: <span id="gold">0</span></div>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-label">Счет</div>
-                    <div class="stat-value score-value" id="score">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Комбо</div>
-                    <div class="stat-value combo-value" id="combo">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Ходы</div>
-                    <div class="stat-value moves-value" id="moves">30</div>
-                </div>
+            <div class="header-item">
+                <span>MOVES</span>
+                <span id="moves-left">20</span>
+            </div>
+             <div class="header-item">
+                <span>GOLD</span>
+                <span id="score">0</span>
             </div>
         </div>
-
-        <div class="game-controls">
-            <button class="finish-btn" id="finish-btn" style="display: none;">
-                🏁 Закончить игру и забрать золото
-            </button>
+        
+        <div id="game-board">
+            <!-- Tiles will be generated by JS -->
         </div>
 
-        <div class="power-ups">
-            <div class="power-up" id="shuffle-power" title="Перемешать поле (200 очков)">🔄</div>
-            <div class="power-up" id="bomb-power" title="Взрыв (150 очков)">💥</div>
-            <div class="power-up" id="rainbow-power" title="Радуга (300 очков)">🌈</div>
-        </div>
-
-        <div id="game-board"></div>
-
-        <div class="info">
-            <p>Собирайте комбинации из 3+ одинаковых предметов!</p>
-            <p>10 очков = 1 золото 💰 | Создавайте комбо для больших очков! 🔥</p>
-        </div>
+        <button id="claim-button" class="button" disabled>Claim Gold</button>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Telegram Web App инициализация с отладкой
-            console.log("Инициализация Telegram Web App...");
+            // Telegram Web App initialization
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
             
-            let tg = null;
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                tg.ready();
-                console.log("Telegram Web App готов:", tg);
-                console.log("User:", tg.initDataUnsafe?.user);
-                
-                // Настраиваем кнопку
-                tg.MainButton.setText('💰 Забрать заработанное золото');
-                tg.MainButton.onClick(finishGame);
-                tg.MainButton.hide();
-                
-                // Расширяем viewport
-                tg.expand();
-            } else {
-                console.log("Telegram Web App не доступен - запуск в браузере");
-            }
-
-            // Игровые переменные
-            const board = document.getElementById('game-board');
-            const scoreDisplay = document.getElementById('score');
-            const comboDisplay = document.getElementById('combo');
-            const movesDisplay = document.getElementById('moves');
-            const goldDisplay = document.getElementById('gold');
-            const finishBtn = document.getElementById('finish-btn');
+            // Game Constants
+            const boardSize = 8;
+            const pieces = ['🐟', '🧶', '🐭', '🐾', '🥛', '🍬'];
+            const gameBoard = document.getElementById('game-board');
+            const scoreElement = document.getElementById('score');
+            const movesLeftElement = document.getElementById('moves-left');
+            const claimButton = document.getElementById('claim-button');
             
-            const width = 8;
-            const items = ['🐟', '🧶', '🐭', '🍖', '🥛', '🌿', '💎', '🎁'];
-            let grid = [];
-            let score = 0;
-            let combo = 0;
-            let moves = 50; // Увеличиваем ходы для большего заработка
+            let board = [];
             let selectedTile = null;
+            let score = 0;
+            let movesLeft = 20;
             let isProcessing = false;
 
-            // Создание игрового поля
-            function createBoard() {
-                board.innerHTML = '';
-                grid = [];
-                
-                for (let i = 0; i < width * width; i++) {
-                    const tile = document.createElement('div');
-                    tile.classList.add('tile');
-                    tile.setAttribute('data-id', i);
-                    tile.addEventListener('click', onTileClick);
-                    
-                    let randomItem = items[Math.floor(Math.random() * items.length)];
-                    tile.textContent = randomItem;
-                    
-                    board.appendChild(tile);
-                    grid.push(tile);
-                }
-                
-                // Убираем начальные комбинации
-                while (checkForInitialMatches()) {
-                    shuffleBoard();
-                }
+            // --- Game Initialization ---
+            function initGame() {
+                createBoard();
+                renderBoard();
+                updateStats();
             }
 
-            // Проверка начальных комбинаций
-            function checkForInitialMatches() {
-                for (let i = 0; i < width * width; i++) {
-                    if (i % width <= width - 3) {
-                        if (grid[i].textContent === grid[i+1].textContent && 
-                            grid[i].textContent === grid[i+2].textContent) {
+            function createBoard() {
+                board = [];
+                for (let r = 0; r < boardSize; r++) {
+                    const row = [];
+                    for (let c = 0; c < boardSize; c++) {
+                        row.push(getRandomPiece());
+                    }
+                    board.push(row);
+                }
+                 if (!isPlayable() || hasInitialMatches()) {
+                    createBoard(); // Regenerate board if it has no moves or initial matches
+                }
+            }
+            
+             function hasInitialMatches() {
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize - 2; c++) {
+                        if (board[r][c] === board[r][c + 1] && board[r][c] === board[r][c + 2]) {
                             return true;
                         }
                     }
-                    if (i < width * (width - 2)) {
-                        if (grid[i].textContent === grid[i+width].textContent && 
-                            grid[i].textContent === grid[i+width*2].textContent) {
+                }
+                for (let r = 0; r < boardSize - 2; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        if (board[r][c] === board[r+1][c] && board[r][c] === board[r+2][c]) {
                             return true;
                         }
                     }
                 }
                 return false;
             }
-
-            // Перемешивание поля
-            function shuffleBoard() {
-                const contents = grid.map(tile => tile.textContent);
-                for (let i = contents.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [contents[i], contents[j]] = [contents[j], contents[i]];
+            
+            function isPlayable() {
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        // Check swap right
+                        if (c < boardSize - 1) {
+                            [board[r][c], board[r][c + 1]] = [board[r][c + 1], board[r][c]];
+                            if (checkForMatches().length > 0) {
+                                [board[r][c], board[r][c + 1]] = [board[r][c + 1], board[r][c]]; // Swap back
+                                return true;
+                            }
+                            [board[r][c], board[r][c + 1]] = [board[r][c + 1], board[r][c]]; // Swap back
+                        }
+                        // Check swap down
+                        if (r < boardSize - 1) {
+                           [board[r][c], board[r+1][c]] = [board[r+1][c], board[r][c]];
+                            if (checkForMatches().length > 0) {
+                                [board[r][c], board[r+1][c]] = [board[r+1][c], board[r][c]]; // Swap back
+                                return true;
+                            }
+                           [board[r][c], board[r+1][c]] = [board[r+1][c], board[r][c]]; // Swap back
+                        }
+                    }
                 }
-                grid.forEach((tile, index) => {
-                    tile.textContent = contents[index];
-                });
+                return false;
             }
 
-            // Обработка клика
-            function onTileClick() {
-                if (isProcessing || moves <= 0) return;
-                
-                const clickedTile = this;
 
+            function renderBoard() {
+                gameBoard.innerHTML = '';
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        const tile = document.createElement('div');
+                        tile.classList.add('tile');
+                        tile.textContent = board[r][c];
+                        tile.dataset.r = r;
+                        tile.dataset.c = c;
+                        tile.addEventListener('click', handleTileClick);
+                        gameBoard.appendChild(tile);
+                    }
+                }
+            }
+
+            function getRandomPiece() {
+                return pieces[Math.floor(Math.random() * pieces.length)];
+            }
+            
+            function updateStats() {
+                scoreElement.textContent = score;
+                movesLeftElement.textContent = movesLeft;
+            }
+
+            // --- Game Logic ---
+            async function handleTileClick(event) {
+                if (isProcessing || movesLeft <= 0) return;
+                
+                const clickedTile = event.target;
+                
                 if (!selectedTile) {
                     selectedTile = clickedTile;
                     selectedTile.classList.add('selected');
-                    playSound('select');
-                } else if (selectedTile === clickedTile) {
-                    selectedTile.classList.remove('selected');
-                    selectedTile = null;
                 } else {
-                    const firstId = parseInt(selectedTile.getAttribute('data-id'));
-                    const secondId = parseInt(clickedTile.getAttribute('data-id'));
-                    
-                    if (isAdjacent(firstId, secondId)) {
-                        performSwap(selectedTile, clickedTile);
+                    const r1 = parseInt(selectedTile.dataset.r);
+                    const c1 = parseInt(selectedTile.dataset.c);
+                    const r2 = parseInt(clickedTile.dataset.r);
+                    const c2 = parseInt(clickedTile.dataset.c);
+
+                    // Deselect if the same tile is clicked again
+                    if (r1 === r2 && c1 === c2) {
+                        selectedTile.classList.remove('selected');
+                        selectedTile = null;
+                        return;
                     }
                     
-                    selectedTile.classList.remove('selected');
-                    selectedTile = null;
+                    const isAdjacent = Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+
+                    if (isAdjacent) {
+                        selectedTile.classList.remove('selected');
+                        await processSwap(selectedTile, clickedTile);
+                        selectedTile = null;
+                    } else {
+                        // Not adjacent, so select the new tile
+                        selectedTile.classList.remove('selected');
+                        selectedTile = clickedTile;
+                        selectedTile.classList.add('selected');
+                    }
                 }
             }
-
-            // Проверка соседних ячеек
-            function isAdjacent(id1, id2) {
-                const row1 = Math.floor(id1 / width);
-                const col1 = id1 % width;
-                const row2 = Math.floor(id2 / width);
-                const col2 = id2 % width;
-                
-                return (Math.abs(row1 - row2) === 1 && col1 === col2) ||
-                       (Math.abs(col1 - col2) === 1 && row1 === row2);
-            }
-
-            // Выполнение обмена
-            async function performSwap(tile1, tile2) {
+            
+            async function processSwap(tile1, tile2) {
                 isProcessing = true;
+
+                const r1 = parseInt(tile1.dataset.r);
+                const c1 = parseInt(tile1.dataset.c);
+                const r2 = parseInt(tile2.dataset.r);
+                const c2 = parseInt(tile2.dataset.c);
                 
-                const temp = tile1.textContent;
-                tile1.textContent = tile2.textContent;
-                tile2.textContent = temp;
-                
-                const matches = await checkForMatches();
-                
-                if (!matches) {
-                    // Возвращаем обратно если нет совпадений
-                    const temp = tile1.textContent;
-                    tile1.textContent = tile2.textContent;
-                    tile2.textContent = temp;
-                    playSound('error');
+                // Swap in the board array
+                [board[r1][c1], board[r2][c2]] = [board[r2][c2], board[r1][c1]];
+                renderBoard(); // Immediately render swap for responsiveness
+
+                const matches = checkForMatches();
+
+                if (matches.length > 0) {
+                    movesLeft--;
+                    await handleMatches(matches);
                 } else {
-                    moves--;
-                    movesDisplay.textContent = moves;
-                    updateGold(); // Обновляем золото при каждом успешном ходе
-                    playSound('match');
-                    
-                    if (moves <= 0) {
-                        setTimeout(checkGameEnd, 1000);
-                    }
-                    
-                    // Кнопка появится только при окончании игры или по желанию игрока
+                    // Invalid swap, swap back
+                    [board[r1][c1], board[r2][c2]] = [board[r2][c2], board[r1][c1]];
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Short pause
+                    renderBoard(); // Render the revert
                 }
                 
                 isProcessing = false;
-            }
-
-            // Проверка совпадений
-            async function checkForMatches() {
-                let matchFound = false;
-                let matchedTiles = new Set();
                 
-                // Горизонтальные совпадения
-                for (let row = 0; row < width; row++) {
-                    let count = 1;
-                    let currentItem = grid[row * width].textContent;
-                    
-                    for (let col = 1; col < width; col++) {
-                        const index = row * width + col;
-                        if (grid[index].textContent === currentItem && currentItem !== '') {
-                            count++;
-                        } else {
-                            if (count >= 3) {
-                                for (let i = 0; i < count; i++) {
-                                    matchedTiles.add(row * width + col - 1 - i);
-                                }
-                            }
-                            count = 1;
-                            currentItem = grid[index].textContent;
-                        }
-                    }
-                    if (count >= 3) {
-                        for (let i = 0; i < count; i++) {
-                            matchedTiles.add(row * width + width - 1 - i);
-                        }
-                    }
-                }
-                
-                // Вертикальные совпадения
-                for (let col = 0; col < width; col++) {
-                    let count = 1;
-                    let currentItem = grid[col].textContent;
-                    
-                    for (let row = 1; row < width; row++) {
-                        const index = row * width + col;
-                        if (grid[index].textContent === currentItem && currentItem !== '') {
-                            count++;
-                        } else {
-                            if (count >= 3) {
-                                for (let i = 0; i < count; i++) {
-                                    matchedTiles.add((row - 1 - i) * width + col);
-                                }
-                            }
-                            count = 1;
-                            currentItem = grid[index].textContent;
-                        }
-                    }
-                    if (count >= 3) {
-                        for (let i = 0; i < count; i++) {
-                            matchedTiles.add((width - 1 - i) * width + col);
-                        }
-                    }
-                }
-                
-                if (matchedTiles.size > 0) {
-                    matchFound = true;
-                    await animateMatches(matchedTiles);
-                    await dropItems();
-                    
-                    combo++;
-                    comboDisplay.textContent = combo;
-                    
-                    // Показываем комбо текст
-                    if (combo > 1) {
-                        showComboText();
-                    }
-                    
-                    // Рекурсивная проверка новых совпадений
-                    const newMatches = await checkForMatches();
-                    if (!newMatches) {
-                        combo = 0;
-                        comboDisplay.textContent = combo;
-                    }
+                if (movesLeft <= 0) {
+                    endGame();
                 } else {
-                    combo = 0;
-                    comboDisplay.textContent = combo;
-                }
-                
-                updateGold(); // Обновляем золото
-                return matchFound;
-            }
-
-            // Анимация совпадений
-            async function animateMatches(matchedTiles) {
-                const basePoints = 100;
-                const comboMultiplier = Math.max(1, combo);
-                const points = basePoints * matchedTiles.size * comboMultiplier;
-                
-                score += points;
-                scoreDisplay.textContent = score;
-                
-                // Анимация исчезновения
-                matchedTiles.forEach(index => {
-                    grid[index].classList.add('matched');
-                    createParticles(grid[index]);
-                });
-                
-                await new Promise(resolve => setTimeout(resolve, 600));
-                
-                matchedTiles.forEach(index => {
-                    grid[index].textContent = '';
-                    grid[index].classList.remove('matched');
-                });
-            }
-
-            // Создание частиц
-            function createParticles(tile) {
-                const rect = tile.getBoundingClientRect();
-                const particles = ['✨', '💫', '⭐', '🌟'];
-                
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => {
-                        const particle = document.createElement('div');
-                        particle.className = 'particle';
-                        particle.textContent = particles[Math.floor(Math.random() * particles.length)];
-                        particle.style.left = rect.left + Math.random() * rect.width + 'px';
-                        particle.style.top = rect.top + Math.random() * rect.height + 'px';
-                        document.body.appendChild(particle);
-                        
-                        setTimeout(() => particle.remove(), 1500);
-                    }, i * 100);
-                }
-            }
-
-            // Показ текста комбо
-            function showComboText() {
-                const comboText = document.createElement('div');
-                comboText.className = 'combo-text';
-                comboText.textContent = `COMBO x${combo}! 🔥`;
-                document.body.appendChild(comboText);
-                
-                setTimeout(() => comboText.remove(), 1500);
-            }
-
-            // Падение элементов
-            async function dropItems() {
-                let dropped = false;
-                
-                for (let col = 0; col < width; col++) {
-                    let emptySpaces = 0;
-                    
-                    for (let row = width - 1; row >= 0; row--) {
-                        const index = row * width + col;
-                        
-                        if (grid[index].textContent === '') {
-                            emptySpaces++;
-                        } else if (emptySpaces > 0) {
-                            const newIndex = (row + emptySpaces) * width + col;
-                            grid[newIndex].textContent = grid[index].textContent;
-                            grid[index].textContent = '';
-                            grid[newIndex].classList.add('falling');
-                            dropped = true;
-                            
-                            setTimeout(() => {
-                                grid[newIndex].classList.remove('falling');
-                            }, 800);
-                        }
+                    if (!isPlayable()){
+                        // No moves left on the board, but the game isn't over by moves.
+                        await shuffleBoard();
                     }
-                    
-                    // Заполняем пустые места сверху
-                    for (let row = 0; row < width; row++) {
-                        const index = row * width + col;
-                        if (grid[index].textContent === '') {
-                            grid[index].textContent = items[Math.floor(Math.random() * items.length)];
-                            grid[index].classList.add('falling');
-                            dropped = true;
-                            
-                            setTimeout(() => {
-                                grid[index].classList.remove('falling');
-                            }, 800);
+                }
+            }
+
+            function checkForMatches() {
+                const matches = new Set();
+
+                // Horizontal
+                for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize - 2; c++) {
+                        if (board[r][c] && board[r][c] === board[r][c + 1] && board[r][c] === board[r][c + 2]) {
+                            matches.add(`${r}-${c}`).add(`${r}-${c+1}`).add(`${r}-${c+2}`);
                         }
                     }
                 }
+                // Vertical
+                for (let c = 0; c < boardSize; c++) {
+                     for (let r = 0; r < boardSize - 2; r++) {
+                        if (board[r][c] && board[r][c] === board[r+1][c] && board[r][c] === board[r+2][c]) {
+                           matches.add(`${r}-${c}`).add(`${r+1}-${c}`).add(`${r+2}-${c}`);
+                        }
+                    }
+                }
+
+                return Array.from(matches).map(id => {
+                    const [r, c] = id.split('-').map(Number);
+                    return { r, c };
+                });
+            }
+
+            async function handleMatches(matches) {
+                 let matchScore = matches.length;
+                 if (matches.length > 3) matchScore += (matches.length - 3) * 2;
+                 score += matchScore;
+
+                // Animate matches
+                matches.forEach(({r, c}) => {
+                    const tileEl = document.querySelector(`.tile[data-r='${r}'][data-c='${c}']`);
+                    if(tileEl) tileEl.classList.add('is-match');
+                    board[r][c] = null; // Mark for removal
+                });
                 
-                if (dropped) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                updateStats();
+
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait for animation
+                
+                // Refill board logic
+                dropPieces();
+                fillEmptyTopSpaces();
+                renderBoard();
+
+                const newMatches = checkForMatches();
+                if (newMatches.length > 0) {
+                     await handleMatches(newMatches); // Handle cascades
                 }
             }
 
-            // Обновление золота
-            function updateGold() {
-                const gold = Math.floor(score / 10); // 1 золото за 10 очков
-                goldDisplay.textContent = gold;
+            function dropPieces() {
+                for (let c = 0; c < boardSize; c++) {
+                    let writeRow = boardSize - 1;
+                    for (let r = boardSize - 1; r >= 0; r--) {
+                        if (board[r][c] !== null) {
+                            board[writeRow][c] = board[r][c];
+                            if (r !== writeRow) board[r][c] = null;
+                            writeRow--;
+                        }
+                    }
+                }
+            }
+            
+            function fillEmptyTopSpaces() {
+                 for (let r = 0; r < boardSize; r++) {
+                    for (let c = 0; c < boardSize; c++) {
+                        if(board[r][c] === null){
+                             board[r][c] = getRandomPiece();
+                        }
+                    }
+                }
+            }
+            
+            async function shuffleBoard() {
+                const overlay = document.createElement('div');
+                overlay.classList.add('game-over-overlay');
+                const p = document.createElement('p');
+                p.textContent = "No more moves... Shuffling!";
+                p.style.fontSize = '20px';
+                overlay.appendChild(p);
+                gameBoard.appendChild(overlay);
+
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // Обновляем кнопки
+                createBoard(); // Regenerates until a valid board is made
+                renderBoard();
+            }
+
+
+            function endGame() {
+                const overlay = document.createElement('div');
+                overlay.classList.add('game-over-overlay');
+                
+                const h2 = document.createElement('h2');
+                h2.textContent = 'Game Over';
+                
+                const p = document.createElement('p');
+                p.innerHTML = `You earned <strong>${score}</strong> gold!`;
+
+                overlay.appendChild(h2);
+                overlay.appendChild(p);
+                gameBoard.appendChild(overlay);
+                
                 if (score > 0) {
-                    finishBtn.style.display = 'block';
-                    finishBtn.textContent = `🏁 Закончить игру и забрать ${gold} золота`;
-                    
-                    // В Telegram показываем главную кнопку
-                    if (tg && tg.MainButton) {
-                        tg.MainButton.setText(`💰 Забрать ${gold} золота`);
-                        tg.MainButton.show();
-                    }
+                    claimButton.disabled = false;
                 }
             }
-
-            // Проверка окончания игры
-            function checkGameEnd() {
-                if (moves <= 0) {
-                    const gold = Math.floor(score / 10);
-                    const finalText = document.createElement('div');
-                    finalText.className = 'combo-text';
-                    finalText.textContent = `ИГРА ОКОНЧЕНА! 💰 ${gold}`;
-                    finalText.style.fontSize = '2em';
-                    document.body.appendChild(finalText);
-                    
-                    // Обновляем кнопки для окончания игры
-                    if (tg && tg.MainButton) {
-                        tg.MainButton.setText(`💰 ЗАБРАТЬ ${gold} ЗОЛОТА!`);
-                        tg.MainButton.show();
-                    } else {
-                        // В браузере показываем заметную кнопку
-                        finishBtn.textContent = `🎉 ИГРА ОКОНЧЕНА! Забрать ${gold} золота`;
-                        finishBtn.style.background = 'linear-gradient(135deg, #ff006e, #8338ec)';
-                        finishBtn.style.animation = 'pulse 1.5s infinite';
-                    }
-                    
-                    setTimeout(() => finalText.remove(), 3000);
-                }
-            }
-
-            // Звуковые эффекты (заглушки)
-            function playSound(type) {
-                // В реальном приложении здесь были бы звуковые эффекты
-                // console.log(`Playing sound: ${type}`);
-            }
-
-            // Завершение игры
-            function finishGame() {
-                const gold = Math.floor(score / 10);
-                const gameData = {
-                    score: score,
-                    gold: gold,
-                    combo_max: Math.max(...[combo]),
-                    moves_used: 50 - moves,
-                    timestamp: Date.now()
-                };
-                
-                if (tg && tg.sendData) {
-                    // В Telegram отправляем данные
-                    tg.sendData(JSON.stringify(gameData));
-                    tg.close(); // Закрываем Web App
-                } else {
-                    // В браузере показываем alert
-                    alert(`Игра завершена!\n\nОчки: ${score}\nЗолото: ${gold}\n\nВ Telegram боте золото будет начислено автоматически!`);
-                }
-            }
-
-            // Бонусы (удешевляем для лучшего игрового опыта)
-            document.getElementById('shuffle-power').addEventListener('click', () => {
-                if (score >= 200) {
-                    score -= 200;
-                    scoreDisplay.textContent = score;
-                    updateGold();
-                    shuffleBoard();
-                    playSound('powerup');
+            
+            claimButton.addEventListener('click', () => {
+                if (score > 0) {
+                    const dataToSend = JSON.stringify({ game: 'match3', score: score });
+                    tg.sendData(dataToSend);
+                    tg.close();
                 }
             });
 
-            document.getElementById('bomb-power').addEventListener('click', () => {
-                if (score >= 150) {
-                    score -= 150;
-                    scoreDisplay.textContent = score;
-                    updateGold();
-                    // Взрыв случайной области
-                    const centerIndex = Math.floor(Math.random() * (width * width));
-                    const bombTiles = [centerIndex];
-                    // Добавляем соседние ячейки
-                    [-width, -1, 1, width].forEach(offset => {
-                        const newIndex = centerIndex + offset;
-                        if (newIndex >= 0 && newIndex < width * width) {
-                            bombTiles.push(newIndex);
-                        }
-                    });
-                    
-                    bombTiles.forEach(index => {
-                        if (grid[index]) {
-                            grid[index].textContent = '';
-                            createParticles(grid[index]);
-                        }
-                    });
-                    
-                    setTimeout(() => dropItems(), 500);
-                    playSound('bomb');
-                }
-            });
-
-            document.getElementById('rainbow-power').addEventListener('click', () => {
-                if (score >= 300) {
-                    score -= 300;
-                    scoreDisplay.textContent = score;
-                    updateGold();
-                    // Уничтожаем все элементы одного типа
-                    const targetItem = items[Math.floor(Math.random() * items.length)];
-                    grid.forEach(tile => {
-                        if (tile.textContent === targetItem) {
-                            tile.textContent = '';
-                            createParticles(tile);
-                        }
-                    });
-                    
-                    setTimeout(() => dropItems(), 500);
-                    playSound('rainbow');
-                }
-            });
-
-            // Обработчик кнопки завершения
-            finishBtn.addEventListener('click', finishGame);
-
-            // Инициализация игры
-            createBoard();
+            // Start the game!
+            initGame();
         });
     </script>
+
 </body>
 </html>
