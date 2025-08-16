@@ -316,14 +316,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Telegram Web App инициализация
-            const tg = window.Telegram?.WebApp;
-            if (tg) {
-                tg.ready();
-                tg.MainButton.setText('💰 Забрать заработанное золото');
-                tg.MainButton.onClick(finishGame);
-                tg.MainButton.hide(); // Скрываем до первых очков
-            }
+                // Telegram Web App инициализация
+                const tg = window.Telegram?.WebApp;
+                if (tg) {
+                    tg.ready();
+                    tg.MainButton.setText('💰 Забрать заработанное золото');
+                    tg.MainButton.onClick(finishGame);
+                    // tg.MainButton.hide(); // <-- ЭТА СТРОКА УДАЛЕНА ИЛИ ЗАКОММЕНТИРОВАНА
+                }
 
             // Игровые переменные
             const board = document.getElementById('game-board');
@@ -690,8 +690,8 @@
 
             // Завершение игры
             function finishGame() {
-                // Боту нужен только итоговый счет для расчета награды.
-                // Это безопаснее, так как клиент не диктует, сколько золота он должен получить.
+                // Отправляем боту ТОЛЬКО счёт.
+                // Бот сам должен посчитать награду. Это безопаснее и исправляет ошибку.
                 const dataToSend = {
                     score: score
                 };
@@ -699,8 +699,7 @@
                 if (tg) {
                     // Отправляем данные в виде JSON-строки
                     tg.sendData(JSON.stringify(dataToSend));
-                    // После отправки данных можно закрыть Web App.
-                    // Пользователь сразу вернется в чат с ботом и увидит сообщение о награде.
+                    // Сразу после отправки закрываем Web App, чтобы вернуть пользователя в чат.
                     tg.close();
                 } else {
                     // Это сообщение для отладки, если вы открываете файл локально в браузере
