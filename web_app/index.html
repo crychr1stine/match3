@@ -2,25 +2,40 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Кото-Кристаллы</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Кото-Кристаллы</h1>
-            <div class="score-container">
-                Счет: <span id="score">0</span>
+    <div class="game-container">
+        <header class="game-header">
+            <div class="stat-box">
+                <div class="stat-title">СЧЕТ</div>
+                <div id="score" class="stat-value">0</div>
             </div>
-        </div>
-        <div id="game-board"></div>
-        <p class="info">Найдите комбинации из 3 или более одинаковых предметов!</p>
+            <h1>Кото-Кристаллы</h1>
+            <div class="stat-box">
+                <div class="stat-title">ХОДЫ</div>
+                <div id="moves" class="stat-value">25</div>
+            </div>
+        </header>
+        <main id="game-board-container">
+            <div id="game-board"></div>
+        </main>
+        <p class="info">Меняйте соседние предметы, чтобы собрать ряд из 3 или более!</p>
     </div>
 
-    <!-- Скрипт для интеграции с Telegram -->
+    <!-- Экран "Игра окончена" -->
+    <div id="game-over-screen" class="hidden">
+        <div class="game-over-box">
+            <h2>Игра окончена!</h2>
+            <p>Ваш результат:</p>
+            <p id="final-score" class="final-score-value">0</p>
+            <p class="final-info">Нажмите синюю кнопку внизу, чтобы забрать награду!</p>
+        </div>
+    </div>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Основной скрипт игры -->
     <script src="script.js"></script>
 </body>
 </html>
