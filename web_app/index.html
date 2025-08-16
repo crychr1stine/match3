@@ -690,26 +690,47 @@
 
             // Завершение игры
             function finishGame() {
+                // 1. Проверяем, существует ли вообще объект Telegram
+                if (!window.Telegram || !window.Telegram.WebApp) {
+                    alert("ОШИБКА: Скрипт Telegram не загрузился. Откройте игру через бота.");
+                    console.error("Telegram Web App object is not available.");
+                    return;
+                }
+
+                const tg = window.Telegram.WebApp;
                 const gold = Math.floor(score / 10);
+                
                 const gameData = {
                     score: score,
                     gold: gold,
-                    combo_max: Math.max(...[combo]),
+                    combo_max: Math.max(...[combo]), // Это немного странная конструкция, но она работает. Можно просто: combo
                     moves_used: 50 - moves,
                     timestamp: Date.now()
                 };
-                
-                if (tg) {
-                    // Показываем крутилку загрузки и блокируем кнопку
-                    tg.MainButton.showProgress();
 
-                    // Отправляем данные боту
-                    tg.sendData(JSON.stringify(gameData));
+                // 2. Превращаем данные в строку для отправки
+                const dataString = JSON.stringify(gameData);
+
+                // 3. Показываем, ЧТО мы собираемся отправить
+                alert(`ПОПЫТКА ОТПРАВКИ ДАННЫХ:\n\n${dataString}`);
+                console.log("Attempting to send data:", dataString);
+
+                try {
+                    // 4. Главная команда - отправка данных
+                    tg.sendData(dataString);
                     
-                    // Закрываем Web App после отправки
-                    // tg.close(); // sendData обычно закрывает приложение само, но если нет - раскомментируйте эту строку
-                } else {
-                    alert(`Игра завершена! Заработано золота: ${gold}`);
+                    // 5. Если код дошел до сюда, значит команда sendData выполнилась без ошибок
+                    // Важно: это НЕ значит, что бот их получил, а лишь то, что Telegram их принял на отправку.
+                    alert("Команда tg.sendData(data) была вызвана успешно. Теперь игра закроется.");
+                    console.log("tg.sendData() was called without throwing an error.");
+
+                    // tg.close(); // sendData должна закрывать приложение сама.
+                                // Если игра не закрывается, значит sendData не срабатывает как надо.
+
+                } catch (e) {
+                    // 6. Если что-то пошло не так на этапе отправки, мы увидим ошибку
+                    alert(`ОШИБКА ПРИ ВЫЗОВЕ tg.sendData():\n\n${e.toString()}`);
+                    console.error("Error calling tg.sendData():", e);
                 }
             }
             // Бонусы (удешевляем для лучшего игрового опыта)
