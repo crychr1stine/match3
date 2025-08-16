@@ -198,6 +198,12 @@
             50% { transform: rotate(180deg) scale(1.2); opacity: 0.7; }
         }
 
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
+            100% { transform: scale(1); }
+        }
+
         .particle {
             position: absolute;
             pointer-events: none;
@@ -242,6 +248,34 @@
             color: var(--tg-hint-color);
             font-size: 0.9em;
             line-height: 1.4;
+        }
+
+        .game-controls {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .finish-btn {
+            background: linear-gradient(135deg, var(--accent-gold), #ff8500);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            min-width: 250px;
+        }
+
+        .finish-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .finish-btn:active {
+            transform: translateY(0);
         }
 
         .power-ups {
@@ -299,6 +333,12 @@
             </div>
         </div>
 
+        <div class="game-controls">
+            <button class="finish-btn" id="finish-btn" style="display: none;">
+                🏁 Закончить игру и забрать золото
+            </button>
+        </div>
+
         <div class="power-ups">
             <div class="power-up" id="shuffle-power" title="Перемешать поле (200 очков)">🔄</div>
             <div class="power-up" id="bomb-power" title="Взрыв (150 очков)">💥</div>
@@ -316,14 +356,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-                // Telegram Web App инициализация
-                const tg = window.Telegram?.WebApp;
-                if (tg) {
-                    tg.ready();
-                    tg.MainButton.setText('💰 Забрать заработанное золото');
-                    tg.MainButton.onClick(finishGame);
-                    // tg.MainButton.hide(); // <-- ЭТА СТРОКА УДАЛЕНА ИЛИ ЗАКОММЕНТИРОВАНА
-                }
+            // Telegram Web App инициализация
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.MainButton.setText('💰 Забрать заработанное золото');
+                tg.MainButton.onClick(finishGame);
+                tg.MainButton.hide(); // Скрываем до первых очков
+            }
 
             // Игровые переменные
             const board = document.getElementById('game-board');
@@ -331,6 +371,7 @@
             const comboDisplay = document.getElementById('combo');
             const movesDisplay = document.getElementById('moves');
             const goldDisplay = document.getElementById('gold');
+            const finishBtn = document.getElementById('finish-btn');
             
             const width = 8;
             const items = ['🐟', '🧶', '🐭', '🍖', '🥛', '🌿', '💎', '🎁'];
@@ -459,12 +500,7 @@
                         setTimeout(checkGameEnd, 1000);
                     }
                     
-                    // Показываем кнопку после первых очков
-                    if (tg && score > 0) {
-                        const gold = Math.floor(score / 10);
-                        tg.MainButton.setText(`💰 Забрать ${gold} золота`);
-                        tg.MainButton.show();
-                    }
+                    // Кнопка появится только при окончании игры или по желанию игрока
                 }
                 
                 isProcessing = false;
@@ -657,9 +693,16 @@
                 const gold = Math.floor(score / 10); // 1 золото за 10 очков
                 goldDisplay.textContent = gold;
                 
-                // Обновляем текст кнопки
-                if (tg && gold > 0) {
-                    tg.MainButton.setText(`💰 Забрать ${gold} золота`);
+                // Обновляем кнопки
+                if (score > 0) {
+                    finishBtn.style.display = 'block';
+                    finishBtn.textContent = `🏁 Закончить игру и забрать ${gold} золота`;
+                    
+                    // В Telegram показываем главную кнопку
+                    if (tg && tg.MainButton) {
+                        tg.MainButton.setText(`💰 Забрать ${gold} золота`);
+                        tg.MainButton.show();
+                    }
                 }
             }
 
@@ -673,9 +716,15 @@
                     finalText.style.fontSize = '2em';
                     document.body.appendChild(finalText);
                     
-                    if (tg) {
-                        tg.MainButton.setText(`💰 Забрать ${gold} золота!`);
+                    // Обновляем кнопки для окончания игры
+                    if (tg && tg.MainButton) {
+                        tg.MainButton.setText(`💰 ЗАБРАТЬ ${gold} ЗОЛОТА!`);
                         tg.MainButton.show();
+                    } else {
+                        // В браузере показываем заметную кнопку
+                        finishBtn.textContent = `🎉 ИГРА ОКОНЧЕНА! Забрать ${gold} золота`;
+                        finishBtn.style.background = 'linear-gradient(135deg, #ff006e, #8338ec)';
+                        finishBtn.style.animation = 'pulse 1.5s infinite';
                     }
                     
                     setTimeout(() => finalText.remove(), 3000);
@@ -694,25 +743,18 @@
                 const gameData = {
                     score: score,
                     gold: gold,
-                    combo_max: maxCombo,
+                    combo_max: Math.max(...[combo]),
                     moves_used: 50 - moves,
                     timestamp: Date.now()
                 };
                 
-                if (tg) {
-                    // !!! ДИАГНОСТИЧЕСКОЕ СООБЩЕНИЕ !!!
-                    // Если вы видите это сообщение, а бот не реагирует,
-                    // проблема 100% в URL или настройках GitHub Pages.
-                    alert(`Попытка отправить данные боту: ${JSON.stringify(gameData)}`);
-
-                    // Отправляем данные боту.
+                if (tg && tg.sendData) {
+                    // В Telegram отправляем данные
                     tg.sendData(JSON.stringify(gameData));
-
-                    // Сразу закрываем окно игры.
-                    tg.close();
+                    tg.close(); // Закрываем Web App
                 } else {
-                    // Это сообщение сработает, если вы открыли index.html просто в браузере.
-                    alert(`Игра завершена! Заработано золота: ${gold}. Данные: ${JSON.stringify(gameData)}`);
+                    // В браузере показываем alert
+                    alert(`Игра завершена!\n\nОчки: ${score}\nЗолото: ${gold}\n\nВ Telegram боте золото будет начислено автоматически!`);
                 }
             }
 
@@ -773,6 +815,9 @@
                     playSound('rainbow');
                 }
             });
+
+            // Обработчик кнопки завершения
+            finishBtn.addEventListener('click', finishGame);
 
             // Инициализация игры
             createBoard();
