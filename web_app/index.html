@@ -700,12 +700,18 @@
                 };
                 
                 if (tg) {
+                    // Показываем крутилку загрузки и блокируем кнопку
+                    tg.MainButton.showProgress();
+
+                    // Отправляем данные боту
                     tg.sendData(JSON.stringify(gameData));
+                    
+                    // Закрываем Web App после отправки
+                    // tg.close(); // sendData обычно закрывает приложение само, но если нет - раскомментируйте эту строку
                 } else {
                     alert(`Игра завершена! Заработано золота: ${gold}`);
                 }
             }
-
             // Бонусы (удешевляем для лучшего игрового опыта)
             document.getElementById('shuffle-power').addEventListener('click', () => {
                 if (score >= 200) {
